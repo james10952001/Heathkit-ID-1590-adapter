@@ -111,9 +111,9 @@ int main(void)
 		case 928 ... 990:
 			LAMPS = N_NW;
 			break;
-            default:
-                LAMPS = 0x00; // this should never be possible to hit
-                break;
-        }
+            	default:
+                	LAMPS = 0x00; // this should never be possible to hit
+                	break;
+        	}
 	}
 }
