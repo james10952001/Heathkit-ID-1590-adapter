@@ -1,0 +1,404 @@
+
+HeathWind.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         0000017a  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .debug_aranges 00000020  00000000  00000000  000001ce  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  2 .debug_pubnames 0000001b  00000000  00000000  000001ee  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_info   00000090  00000000  00000000  00000209  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_abbrev 00000050  00000000  00000000  00000299  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_line   000001aa  00000000  00000000  000002e9  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_frame  00000020  00000000  00000000  00000494  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_str    00000098  00000000  00000000  000004b4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	12 c0       	rjmp	.+36     	; 0x26 <__ctors_end>
+   2:	19 c0       	rjmp	.+50     	; 0x36 <__bad_interrupt>
+   4:	18 c0       	rjmp	.+48     	; 0x36 <__bad_interrupt>
+   6:	17 c0       	rjmp	.+46     	; 0x36 <__bad_interrupt>
+   8:	16 c0       	rjmp	.+44     	; 0x36 <__bad_interrupt>
+   a:	15 c0       	rjmp	.+42     	; 0x36 <__bad_interrupt>
+   c:	14 c0       	rjmp	.+40     	; 0x36 <__bad_interrupt>
+   e:	13 c0       	rjmp	.+38     	; 0x36 <__bad_interrupt>
+  10:	12 c0       	rjmp	.+36     	; 0x36 <__bad_interrupt>
+  12:	11 c0       	rjmp	.+34     	; 0x36 <__bad_interrupt>
+  14:	10 c0       	rjmp	.+32     	; 0x36 <__bad_interrupt>
+  16:	0f c0       	rjmp	.+30     	; 0x36 <__bad_interrupt>
+  18:	0e c0       	rjmp	.+28     	; 0x36 <__bad_interrupt>
+  1a:	0d c0       	rjmp	.+26     	; 0x36 <__bad_interrupt>
+  1c:	0c c0       	rjmp	.+24     	; 0x36 <__bad_interrupt>
+  1e:	0b c0       	rjmp	.+22     	; 0x36 <__bad_interrupt>
+  20:	0a c0       	rjmp	.+20     	; 0x36 <__bad_interrupt>
+  22:	09 c0       	rjmp	.+18     	; 0x36 <__bad_interrupt>
+  24:	08 c0       	rjmp	.+16     	; 0x36 <__bad_interrupt>
+
+00000026 <__ctors_end>:
+  26:	11 24       	eor	r1, r1
+  28:	1f be       	out	0x3f, r1	; 63
+  2a:	cf e5       	ldi	r28, 0x5F	; 95
+  2c:	d4 e0       	ldi	r29, 0x04	; 4
+  2e:	de bf       	out	0x3e, r29	; 62
+  30:	cd bf       	out	0x3d, r28	; 61
+  32:	02 d0       	rcall	.+4      	; 0x38 <main>
+  34:	a0 c0       	rjmp	.+320    	; 0x176 <_exit>
+
+00000036 <__bad_interrupt>:
+  36:	e4 cf       	rjmp	.-56     	; 0x0 <__vectors>
+
+00000038 <main>:
+#define W_NW		0b00001100
+#define NW			0b00001000
+#define N_NW		0b00011000
+
+int main(void)
+{
+  38:	af 92       	push	r10
+  3a:	bf 92       	push	r11
+  3c:	cf 92       	push	r12
+  3e:	df 92       	push	r13
+  40:	ef 92       	push	r14
+  42:	ff 92       	push	r15
+  44:	0f 93       	push	r16
+  46:	1f 93       	push	r17
+	// all 8 pins of PORTB drive lamps
+	DDRB = 0xFF; 	// set entire port to output
+  48:	8f ef       	ldi	r24, 0xFF	; 255
+  4a:	87 bb       	out	0x17, r24	; 23
+	LAMPS = 0x00;	// turn all lamps off to start
+  4c:	18 ba       	out	0x18, r1	; 24
+	// should disable digital input on ADC port
+    
+	// set up the ADC, ref is Vcc, using ch0 only
+   	ADCSRA = (1<<ADEN) | (1<<ADPS1) | (1<<ADPS2) | (1<<ADPS0);
+  4e:	87 e8       	ldi	r24, 0x87	; 135
+  50:	86 b9       	out	0x06, r24	; 6
+   	ADMUX = (1<<REFS0); 
+  52:	80 e4       	ldi	r24, 0x40	; 64
+  54:	87 b9       	out	0x07, r24	; 7
+  56:	20 e0       	ldi	r18, 0x00	; 0
+  58:	30 e0       	ldi	r19, 0x00	; 0
+		according to the value read from the wind vane pot by the ADC. 
+		*/
+        switch (position) {
+            case 0 ... 31:			// Pot wraps around due North, 4 degree dead spot
+			case 991 ... 1023:
+                LAMPS = N; 
+  5a:	70 e1       	ldi	r23, 0x10	; 16
+  5c:	a7 2e       	mov	r10, r23
+				break;
+			case 864 ... 927:
+				LAMPS = NW;
+				break;
+			case 928 ... 990:
+				LAMPS = N_NW;
+  5e:	68 e1       	ldi	r22, 0x18	; 24
+  60:	b6 2e       	mov	r11, r22
+				break;
+			case 800 ... 863:
+				LAMPS = W_NW;
+				break;
+			case 864 ... 927:
+				LAMPS = NW;
+  62:	58 e0       	ldi	r21, 0x08	; 8
+  64:	c5 2e       	mov	r12, r21
+				break;
+			case 737 ... 799:
+				LAMPS = W;
+				break;
+			case 800 ... 863:
+				LAMPS = W_NW;
+  66:	4c e0       	ldi	r20, 0x0C	; 12
+  68:	d4 2e       	mov	r13, r20
+				break;
+			case 672 ... 736:
+				LAMPS = W_SW;
+				break;
+			case 737 ... 799:
+				LAMPS = W;
+  6a:	94 e0       	ldi	r25, 0x04	; 4
+  6c:	e9 2e       	mov	r14, r25
+				break;
+			case 608 ... 671:
+				LAMPS = SW;
+				break;
+			case 672 ... 736:
+				LAMPS = W_SW;
+  6e:	86 e0       	ldi	r24, 0x06	; 6
+  70:	f8 2e       	mov	r15, r24
+				break;
+			case 544 ... 607:
+				LAMPS = S_SW;
+				break;
+			case 608 ... 671:
+				LAMPS = SW;
+  72:	02 e0       	ldi	r16, 0x02	; 2
+				break;
+			case 480 ... 543:
+				LAMPS = S;
+				break;
+			case 544 ... 607:
+				LAMPS = S_SW;
+  74:	13 e0       	ldi	r17, 0x03	; 3
+				break;
+			case 416 ... 479:
+				LAMPS = S_SE;
+				break;
+			case 480 ... 543:
+				LAMPS = S;
+  76:	b1 e0       	ldi	r27, 0x01	; 1
+				break;
+			case 352 ... 415:
+				LAMPS = SE;
+				break;
+			case 416 ... 479:
+				LAMPS = S_SE;
+  78:	a1 e8       	ldi	r26, 0x81	; 129
+				break;
+			case 288 ... 351:
+				LAMPS = E_SE;
+				break;
+			case 352 ... 415:
+				LAMPS = SE;
+  7a:	f0 e8       	ldi	r31, 0x80	; 128
+				break;
+			case 224 ... 287:
+				LAMPS = E;
+				break;
+			case 288 ... 351:
+				LAMPS = E_SE;
+  7c:	e0 ec       	ldi	r30, 0xC0	; 192
+                break;
+			case 160 ... 223:
+				LAMPS = E_NE;
+				break;
+			case 224 ... 287:
+				LAMPS = E;
+  7e:	70 e4       	ldi	r23, 0x40	; 64
+                break;
+            case 96 ... 159:
+                LAMPS = NE;
+                break;
+			case 160 ... 223:
+				LAMPS = E_NE;
+  80:	60 e6       	ldi	r22, 0x60	; 96
+                break;
+            case 32 ... 95:			
+                LAMPS = N_NE;
+                break;
+            case 96 ... 159:
+                LAMPS = NE;
+  82:	50 e2       	ldi	r21, 0x20	; 32
+            case 0 ... 31:			// Pot wraps around due North, 4 degree dead spot
+			case 991 ... 1023:
+                LAMPS = N; 
+                break;
+            case 32 ... 95:			
+                LAMPS = N_NE;
+  84:	40 e3       	ldi	r20, 0x30	; 48
+	unsigned int position = 0;
+
+	// main loop starts here
+	while(1)
+	{
+       	ADCSRA |= (1<<ADSC); 				// start ADC conversion by setting bit
+  86:	36 9a       	sbi	0x06, 6	; 6
+        do{} while (ADCSRA & (1<<ADSC)); 	// wait for conversion to complete
+  88:	36 99       	sbic	0x06, 6	; 6
+  8a:	fe cf       	rjmp	.-4      	; 0x88 <__SREG__+0x49>
+		
+		// provide a bit of hysteresis to prevent flickering, copy 
+		// the ADC reading into the position variable if the difference is over 50
+		if( abs(ADC-position) > HYSTERESIS)
+  8c:	84 b1       	in	r24, 0x04	; 4
+  8e:	95 b1       	in	r25, 0x05	; 5
+  90:	82 1b       	sub	r24, r18
+  92:	93 0b       	sbc	r25, r19
+  94:	97 ff       	sbrs	r25, 7
+  96:	03 c0       	rjmp	.+6      	; 0x9e <__SREG__+0x5f>
+  98:	90 95       	com	r25
+  9a:	81 95       	neg	r24
+  9c:	9f 4f       	sbci	r25, 0xFF	; 255
+  9e:	c3 97       	sbiw	r24, 0x33	; 51
+  a0:	14 f0       	brlt	.+4      	; 0xa6 <__SREG__+0x67>
+		{
+			position = ADC; 
+  a2:	24 b1       	in	r18, 0x04	; 4
+  a4:	35 b1       	in	r19, 0x05	; 5
+		/*
+  		There are 8 lamps with 16 possible states to indicate the wind direction by
+		illuminating either one or two adjacent lamps. This simply selects the state
+		according to the value read from the wind vane pot by the ADC. 
+		*/
+        switch (position) {
+  a6:	82 e0       	ldi	r24, 0x02	; 2
+  a8:	20 32       	cpi	r18, 0x20	; 32
+  aa:	38 07       	cpc	r19, r24
+  ac:	00 f5       	brcc	.+64     	; 0xee <__SREG__+0xaf>
+  ae:	81 e0       	ldi	r24, 0x01	; 1
+  b0:	20 3e       	cpi	r18, 0xE0	; 224
+  b2:	38 07       	cpc	r19, r24
+  b4:	08 f0       	brcs	.+2      	; 0xb8 <__SREG__+0x79>
+  b6:	4d c0       	rjmp	.+154    	; 0x152 <__SREG__+0x113>
+  b8:	20 3e       	cpi	r18, 0xE0	; 224
+  ba:	31 05       	cpc	r19, r1
+  bc:	50 f4       	brcc	.+20     	; 0xd2 <__SREG__+0x93>
+  be:	20 3a       	cpi	r18, 0xA0	; 160
+  c0:	31 05       	cpc	r19, r1
+  c2:	e8 f5       	brcc	.+122    	; 0x13e <__SREG__+0xff>
+  c4:	20 36       	cpi	r18, 0x60	; 96
+  c6:	31 05       	cpc	r19, r1
+  c8:	c0 f5       	brcc	.+112    	; 0x13a <__SREG__+0xfb>
+  ca:	20 32       	cpi	r18, 0x20	; 32
+  cc:	31 05       	cpc	r19, r1
+  ce:	98 f5       	brcc	.+102    	; 0x136 <__SREG__+0xf7>
+  d0:	30 c0       	rjmp	.+96     	; 0x132 <__SREG__+0xf3>
+  d2:	81 e0       	ldi	r24, 0x01	; 1
+  d4:	20 36       	cpi	r18, 0x60	; 96
+  d6:	38 07       	cpc	r19, r24
+  d8:	28 f4       	brcc	.+10     	; 0xe4 <__SREG__+0xa5>
+  da:	81 e0       	ldi	r24, 0x01	; 1
+  dc:	20 32       	cpi	r18, 0x20	; 32
+  de:	38 07       	cpc	r19, r24
+  e0:	90 f5       	brcc	.+100    	; 0x146 <__SREG__+0x107>
+  e2:	2f c0       	rjmp	.+94     	; 0x142 <__SREG__+0x103>
+  e4:	81 e0       	ldi	r24, 0x01	; 1
+  e6:	20 3a       	cpi	r18, 0xA0	; 160
+  e8:	38 07       	cpc	r19, r24
+  ea:	78 f1       	brcs	.+94     	; 0x14a <__SREG__+0x10b>
+  ec:	30 c0       	rjmp	.+96     	; 0x14e <__SREG__+0x10f>
+  ee:	83 e0       	ldi	r24, 0x03	; 3
+  f0:	20 32       	cpi	r18, 0x20	; 32
+  f2:	38 07       	cpc	r19, r24
+  f4:	68 f4       	brcc	.+26     	; 0x110 <__SREG__+0xd1>
+  f6:	82 e0       	ldi	r24, 0x02	; 2
+  f8:	21 3e       	cpi	r18, 0xE1	; 225
+  fa:	38 07       	cpc	r19, r24
+  fc:	90 f5       	brcc	.+100    	; 0x162 <__SREG__+0x123>
+  fe:	82 e0       	ldi	r24, 0x02	; 2
+ 100:	20 3a       	cpi	r18, 0xA0	; 160
+ 102:	38 07       	cpc	r19, r24
+ 104:	60 f5       	brcc	.+88     	; 0x15e <__SREG__+0x11f>
+ 106:	82 e0       	ldi	r24, 0x02	; 2
+ 108:	20 36       	cpi	r18, 0x60	; 96
+ 10a:	38 07       	cpc	r19, r24
+ 10c:	30 f5       	brcc	.+76     	; 0x15a <__SREG__+0x11b>
+ 10e:	23 c0       	rjmp	.+70     	; 0x156 <__SREG__+0x117>
+ 110:	83 e0       	ldi	r24, 0x03	; 3
+ 112:	20 3a       	cpi	r18, 0xA0	; 160
+ 114:	38 07       	cpc	r19, r24
+ 116:	28 f4       	brcc	.+10     	; 0x122 <__SREG__+0xe3>
+ 118:	83 e0       	ldi	r24, 0x03	; 3
+ 11a:	20 36       	cpi	r18, 0x60	; 96
+ 11c:	38 07       	cpc	r19, r24
+ 11e:	28 f5       	brcc	.+74     	; 0x16a <__SREG__+0x12b>
+ 120:	22 c0       	rjmp	.+68     	; 0x166 <__SREG__+0x127>
+ 122:	83 e0       	ldi	r24, 0x03	; 3
+ 124:	2f 3d       	cpi	r18, 0xDF	; 223
+ 126:	38 07       	cpc	r19, r24
+ 128:	10 f1       	brcs	.+68     	; 0x16e <__SREG__+0x12f>
+ 12a:	84 e0       	ldi	r24, 0x04	; 4
+ 12c:	20 30       	cpi	r18, 0x00	; 0
+ 12e:	38 07       	cpc	r19, r24
+ 130:	00 f5       	brcc	.+64     	; 0x172 <__SREG__+0x133>
+            case 0 ... 31:			// Pot wraps around due North, 4 degree dead spot
+			case 991 ... 1023:
+                LAMPS = N; 
+ 132:	a8 ba       	out	0x18, r10	; 24
+ 134:	a8 cf       	rjmp	.-176    	; 0x86 <__SREG__+0x47>
+                break;
+            case 32 ... 95:			
+                LAMPS = N_NE;
+ 136:	48 bb       	out	0x18, r20	; 24
+ 138:	a6 cf       	rjmp	.-180    	; 0x86 <__SREG__+0x47>
+                break;
+            case 96 ... 159:
+                LAMPS = NE;
+ 13a:	58 bb       	out	0x18, r21	; 24
+ 13c:	a4 cf       	rjmp	.-184    	; 0x86 <__SREG__+0x47>
+                break;
+			case 160 ... 223:
+				LAMPS = E_NE;
+ 13e:	68 bb       	out	0x18, r22	; 24
+ 140:	a2 cf       	rjmp	.-188    	; 0x86 <__SREG__+0x47>
+				break;
+			case 224 ... 287:
+				LAMPS = E;
+ 142:	78 bb       	out	0x18, r23	; 24
+ 144:	a0 cf       	rjmp	.-192    	; 0x86 <__SREG__+0x47>
+				break;
+			case 288 ... 351:
+				LAMPS = E_SE;
+ 146:	e8 bb       	out	0x18, r30	; 24
+ 148:	9e cf       	rjmp	.-196    	; 0x86 <__SREG__+0x47>
+				break;
+			case 352 ... 415:
+				LAMPS = SE;
+ 14a:	f8 bb       	out	0x18, r31	; 24
+ 14c:	9c cf       	rjmp	.-200    	; 0x86 <__SREG__+0x47>
+				break;
+			case 416 ... 479:
+				LAMPS = S_SE;
+ 14e:	a8 bb       	out	0x18, r26	; 24
+ 150:	9a cf       	rjmp	.-204    	; 0x86 <__SREG__+0x47>
+				break;
+			case 480 ... 543:
+				LAMPS = S;
+ 152:	b8 bb       	out	0x18, r27	; 24
+ 154:	98 cf       	rjmp	.-208    	; 0x86 <__SREG__+0x47>
+				break;
+			case 544 ... 607:
+				LAMPS = S_SW;
+ 156:	18 bb       	out	0x18, r17	; 24
+ 158:	96 cf       	rjmp	.-212    	; 0x86 <__SREG__+0x47>
+				break;
+			case 608 ... 671:
+				LAMPS = SW;
+ 15a:	08 bb       	out	0x18, r16	; 24
+ 15c:	94 cf       	rjmp	.-216    	; 0x86 <__SREG__+0x47>
+				break;
+			case 672 ... 736:
+				LAMPS = W_SW;
+ 15e:	f8 ba       	out	0x18, r15	; 24
+ 160:	92 cf       	rjmp	.-220    	; 0x86 <__SREG__+0x47>
+				break;
+			case 737 ... 799:
+				LAMPS = W;
+ 162:	e8 ba       	out	0x18, r14	; 24
+ 164:	90 cf       	rjmp	.-224    	; 0x86 <__SREG__+0x47>
+				break;
+			case 800 ... 863:
+				LAMPS = W_NW;
+ 166:	d8 ba       	out	0x18, r13	; 24
+ 168:	8e cf       	rjmp	.-228    	; 0x86 <__SREG__+0x47>
+				break;
+			case 864 ... 927:
+				LAMPS = NW;
+ 16a:	c8 ba       	out	0x18, r12	; 24
+ 16c:	8c cf       	rjmp	.-232    	; 0x86 <__SREG__+0x47>
+				break;
+			case 928 ... 990:
+				LAMPS = N_NW;
+ 16e:	b8 ba       	out	0x18, r11	; 24
+ 170:	8a cf       	rjmp	.-236    	; 0x86 <__SREG__+0x47>
+				break;
+            default:
+                LAMPS = 0x00; // this should never be possible to hit
+ 172:	18 ba       	out	0x18, r1	; 24
+ 174:	88 cf       	rjmp	.-240    	; 0x86 <__SREG__+0x47>
+
+00000176 <_exit>:
+ 176:	f8 94       	cli
+
+00000178 <__stop_program>:
+ 178:	ff cf       	rjmp	.-2      	; 0x178 <__stop_program>
